@@ -4,6 +4,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import rootRouter from './routes/root';
 import errorHandler from './middleware/errorHandler';
+import corsOptions from './config/corsOptions';
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 8000;
 
 const app = express();
 
+app.use(corsOptions);
 app.use(express.json());
 app.use(cookieParser());
 
