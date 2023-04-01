@@ -2,15 +2,18 @@ import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
+import mongoose from 'mongoose';
 import rootRouter from './routes/root';
 import errorHandler from './middleware/errorHandler';
 import corsOptions from './config/corsOptions';
+import connectDB from './config/db';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 8000;
-
 const app = express();
+
+connectDB();
 
 app.use(corsOptions);
 app.use(express.json());
@@ -32,6 +35,11 @@ app.all('*', (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+mongoose.connection.once('open', () => {
+  console.log('Connected to database');
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error(err);
 });
