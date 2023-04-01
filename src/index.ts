@@ -7,6 +7,8 @@ import rootRouter from './routes/root';
 import errorHandler from './middleware/errorHandler';
 import corsOptions from './config/corsOptions';
 import connectDB from './config/db';
+import recipeRoutes from './routes/recipeRoutes';
+import ingredientRoutes from './routes/ingredientRoutes';
 
 dotenv.config();
 
@@ -21,6 +23,9 @@ app.use(cookieParser());
 
 app.use('/', express.static('public'));
 app.use('/', rootRouter);
+
+app.use('/api/recipes', recipeRoutes);
+app.use('/api/ingredients', ingredientRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);
