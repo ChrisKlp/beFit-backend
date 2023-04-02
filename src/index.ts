@@ -1,14 +1,15 @@
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import express from 'express';
-import path from 'path';
-import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
-import rootRouter from './routes/root';
-import errorHandler from './middleware/errorHandler';
+import path from 'path';
 import corsOptions from './config/corsOptions';
 import connectDB from './config/db';
-import recipeRoutes from './routes/recipeRoutes';
+import errorHandler from './middleware/errorHandler';
+import categoryRoutes from './routes/categoryRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
+import recipeRoutes from './routes/recipeRoutes';
+import rootRouter from './routes/root';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/', rootRouter);
 
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/ingredients', ingredientRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);

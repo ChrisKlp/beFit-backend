@@ -2,7 +2,10 @@ import asyncHandler from 'express-async-handler';
 import Recipe from '../models/Recipe';
 
 export const getAllRecipes = asyncHandler(async (req, res) => {
-  const recipes = await Recipe.find({}).populate('ingredients.ingredient');
+  const recipes = await Recipe.find()
+    .populate('ingredients.ingredient')
+    .populate('categories')
+    .lean();
 
   if (!recipes?.length) {
     res.status(400).json({ message: 'No recipes found' });
@@ -21,10 +24,26 @@ export const createRecipe = asyncHandler(async (req, res) => {
     fat,
     instructions,
     ingredients,
+    categories,
+    image,
   } = req.body;
+
+  if (!title || !ingredients) {
+    res.status(400).json({ message: 'Missing required fields' });
+    return;
+  }
+
+  const duplicate = await Recipe.findOne({ title }).lean().exec();
+
+  if (duplicate) {
+    res.status(409).json({ message: 'Recipe already exists' });
+    return;
+  }
 
   const recipe = await Recipe.create({
     title,
+    image,
+    categories,
     calories,
     protein,
     carbohydrates,
@@ -34,43 +53,76 @@ export const createRecipe = asyncHandler(async (req, res) => {
   });
 
   if (recipe) {
-    res.status(201).json(recipe);
+    res.status(201).json({ message: 'Recipe created' });
   } else {
-    res.status(400);
-    throw new Error('Invalid recipe data');
+    res.status(400).json({ message: 'Invalid recipe data' });
   }
 });
 
 export const updateRecipe = asyncHandler(async (req, res) => {
-  const { title, calories, protein, carbohydrates, fat, instructions } =
-    req.body;
+  const {
+    id,
+    title,
+    calories,
+    protein,
+    carbohydrates,
+    fat,
+    instructions,
+    ingredients,
+    categories,
+    image,
+  } = req.body;
 
-  const recipe = await Recipe.findById(req.params.id);
-
-  if (recipe) {
-    recipe.title = title;
-    recipe.calories = calories;
-    recipe.protein = protein;
-    recipe.carbohydrates = carbohydrates;
-    recipe.fat = fat;
-    recipe.instructions = instructions;
-
-    const updatedRecipe = await recipe.save();
-    res.json(updatedRecipe);
-  } else {
-    res.status(404);
-    throw new Error('Recipe not found');
+  if (!id || !title || !ingredients) {
+    res.status(400).json({ message: 'Missing required fields' });
+    return;
   }
+
+  const recipe = await Recipe.findById(id).exec();
+
+  if (!recipe) {
+    res.status(404).json({ message: 'Recipe not found' });
+    return;
+  }
+
+  const duplicate = await Recipe.findOne({ title }).lean().exec();
+
+  if (duplicate && duplicate._id.toString() !== id) {
+    res.status(409).json({ message: 'Recipe already exists' });
+    return;
+  }
+
+  recipe.title = title;
+  recipe.image = image;
+  recipe.categories = categories;
+  recipe.calories = calories;
+  recipe.protein = protein;
+  recipe.carbohydrates = carbohydrates;
+  recipe.fat = fat;
+  recipe.instructions = instructions;
+  recipe.ingredients = ingredients;
+
+  const updatedRecipe = await recipe.save();
+  res.json({ message: `Recipe ${updatedRecipe.title} updated` });
 });
 
 export const deleteRecipe = asyncHandler(async (req, res) => {
-  const recipe = await Recipe.findById(req.params.id);
+  const { id } = req.body;
 
-  if (recipe) {
-    await recipe.deleteOne();
-    res.json({ message: 'Recipe removed' });
-  } else {
-    res.status(404);
-    throw new Error('Recipe not found');
+  if (!id) {
+    res.status(400).json({ message: 'Missing required fields' });
+    return;
   }
+
+  const recipe = await Recipe.findById(id).exec();
+
+  if (!recipe) {
+    res.status(404).json({ message: 'Recipe not found' });
+    return;
+  }
+
+  await recipe.deleteOne();
+  res.json({
+    message: `Recipe ${recipe.title} with ${recipe.id} deleted`,
+  });
 });
