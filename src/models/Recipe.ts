@@ -6,6 +6,13 @@ const recipeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    categories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
+        required: false,
+      },
+    ],
     calories: {
       type: Number,
       required: false,
@@ -22,13 +29,15 @@ const recipeSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
-    instructions: {
-      type: String,
-      required: false,
-    },
+    instructions: [
+      {
+        type: String,
+        required: false,
+      },
+    ],
     ingredients: [
       {
-        ingredient: {
+        name: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Ingredient',
           required: true,
