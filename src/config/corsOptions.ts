@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const allowedOrigins = ['http://localhost:3000', process.env.ALLOWED_ORIGIN];
+const allowedOrigins = ['http://localhost:5173', process.env.ALLOWED_ORIGIN];
 
 const corsOptions = cors({
   origin: (origin, callback) => {

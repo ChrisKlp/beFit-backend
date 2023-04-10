@@ -9,6 +9,7 @@ import errorHandler from './middleware/errorHandler';
 import categoryRoutes from './routes/categoryRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
 import recipeRoutes from './routes/recipeRoutes';
+import exerciseRoutes from './routes/exerciseRoutes';
 import rootRouter from './routes/root';
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use('/', rootRouter);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/exercises', exerciseRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);
