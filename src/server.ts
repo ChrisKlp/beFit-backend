@@ -10,6 +10,7 @@ import categoryRoutes from './routes/categoryRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
 import recipeRoutes from './routes/recipeRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
+import workoutRoutes from './routes/workoutRoutes';
 import rootRouter from './routes/root';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/recipes', recipeRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/exercises', exerciseRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);
