@@ -7,11 +7,11 @@ import corsOptions from './config/corsOptions';
 import connectDB from './config/db';
 import errorHandler from './middleware/errorHandler';
 import categoryRoutes from './routes/categoryRoutes';
+import exerciseRoutes from './routes/exerciseRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
 import recipeRoutes from './routes/recipeRoutes';
-import exerciseRoutes from './routes/exerciseRoutes';
-import workoutRoutes from './routes/workoutRoutes';
 import rootRouter from './routes/root';
+import workoutRoutes from './routes/workoutRoutes';
 
 dotenv.config();
 

@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Recipe from '../models/Recipe';
+import { uploadImage } from '../config/cloudinary';
 
 export const getAllRecipes = asyncHandler(async (req, res) => {
   const recipes = await Recipe.find()
@@ -16,16 +17,27 @@ export const getAllRecipes = asyncHandler(async (req, res) => {
 });
 
 export const createRecipe = asyncHandler(async (req, res) => {
+  if (Object.entries(req.body).length) {
+    Object.entries(req.body).forEach(([key, value]) => {
+      if (
+        value !== 'undefined' &&
+        value !== 'null' &&
+        typeof value === 'string'
+      ) {
+        req.body[key] = JSON.parse(value);
+      }
+    });
+  }
+
   const {
     title,
     calories,
     protein,
     carbohydrates,
     fat,
-    instructions,
     ingredients,
+    instructions,
     categories,
-    image,
   } = req.body;
 
   if (!title || !ingredients) {
@@ -40,9 +52,12 @@ export const createRecipe = asyncHandler(async (req, res) => {
     return;
   }
 
+  const imagePath = req.file?.path || '';
+
+  const { isSuccess, url } = await uploadImage(imagePath, 'recipes');
+
   const recipe = await Recipe.create({
     title,
-    image,
     categories,
     calories,
     protein,
@@ -50,16 +65,31 @@ export const createRecipe = asyncHandler(async (req, res) => {
     fat,
     instructions,
     ingredients,
+    image: url,
   });
 
-  if (recipe) {
-    res.status(201).json({ message: 'Recipe created' });
+  if (recipe && isSuccess) {
+    res.status(201).json({ message: 'Recipe created with image' });
+  } else if (recipe && !isSuccess) {
+    res.status(201).json({ message: 'Recipe created without image' });
   } else {
     res.status(400).json({ message: 'Invalid recipe data' });
   }
 });
 
 export const updateRecipe = asyncHandler(async (req, res) => {
+  if (Object.entries(req.body).length) {
+    Object.entries(req.body).forEach(([key, value]) => {
+      if (
+        value !== 'undefined' &&
+        value !== 'null' &&
+        typeof value === 'string'
+      ) {
+        req.body[key] = JSON.parse(value);
+      }
+    });
+  }
+
   const {
     id,
     title,
@@ -70,7 +100,6 @@ export const updateRecipe = asyncHandler(async (req, res) => {
     instructions,
     ingredients,
     categories,
-    image,
   } = req.body;
 
   if (!id || !title || !ingredients) {
@@ -92,8 +121,12 @@ export const updateRecipe = asyncHandler(async (req, res) => {
     return;
   }
 
+  const imagePath = req.file?.path || '';
+
+  const { isSuccess, url } = await uploadImage(imagePath, 'recipes');
+
   recipe.title = title;
-  recipe.image = image;
+  if (url) recipe.image = url;
   recipe.categories = categories;
   recipe.calories = calories;
   recipe.protein = protein;
@@ -103,7 +136,13 @@ export const updateRecipe = asyncHandler(async (req, res) => {
   recipe.ingredients = ingredients;
 
   const updatedRecipe = await recipe.save();
-  res.json({ message: `Recipe ${updatedRecipe.title} updated` });
+  if (isSuccess) {
+    res.json({ message: `Recipe ${updatedRecipe.title} updated with image` });
+  } else {
+    res.json({
+      message: `Recipe ${updatedRecipe.title} updated without image`,
+    });
+  }
 });
 
 export const deleteRecipe = asyncHandler(async (req, res) => {

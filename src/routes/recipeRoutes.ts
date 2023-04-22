@@ -5,14 +5,15 @@ import {
   deleteRecipe,
   updateRecipe,
 } from '../controllers/recipesController';
+import upload from '../middleware/upload';
 
 const router = express.Router();
 
 router
   .route('/')
   .get(getAllRecipes)
-  .post(createRecipe)
-  .patch(updateRecipe)
+  .post(upload.single('image'), createRecipe)
+  .patch(upload.single('image'), updateRecipe)
   .delete(deleteRecipe);
 
 export default router;
