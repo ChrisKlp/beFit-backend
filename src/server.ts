@@ -14,6 +14,7 @@ import rootRouter from './routes/root';
 import workoutRoutes from './routes/workoutRoutes';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
+import logger from './middleware/logger';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ const app = express();
 
 connectDB();
 
+app.use(logger);
 app.use(corsOptions);
 app.use(express.json());
 app.use(cookieParser());
