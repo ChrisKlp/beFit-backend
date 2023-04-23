@@ -12,6 +12,7 @@ import ingredientRoutes from './routes/ingredientRoutes';
 import recipeRoutes from './routes/recipeRoutes';
 import rootRouter from './routes/root';
 import workoutRoutes from './routes/workoutRoutes';
+import userRoutes from './routes/userRoutes';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(cookieParser());
 app.use('/', express.static('public'));
 app.use('/', rootRouter);
 
+app.use('/api/users', userRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/categories', categoryRoutes);
