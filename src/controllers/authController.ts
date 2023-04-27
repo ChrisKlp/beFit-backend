@@ -10,14 +10,14 @@ export const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    res.status(400).json({ message: 'Missing required fields' });
+    res.status(400).json({ message: 'Missing Username or Password' });
     return;
   }
 
   const foundUser = await User.findOne({ username }).exec();
 
   if (!foundUser) {
-    res.status(404).json({ message: 'Unauthorized' });
+    res.status(401).json({ message: 'Unauthorized' });
     return;
   }
 
@@ -50,8 +50,8 @@ export const login = asyncHandler(async (req, res) => {
 
   res.cookie('jwt', refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: false,
+    sameSite: 'lax',
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
 
@@ -109,6 +109,6 @@ export const logout = asyncHandler(async (req, res) => {
     return;
   }
 
-  res.clearCookie('jwt', { httpOnly: true, secure: true, sameSite: 'none' });
+  res.clearCookie('jwt', { httpOnly: true, secure: false, sameSite: 'lax' });
   res.json({ message: 'Logged out' });
 });

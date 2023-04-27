@@ -5,11 +5,11 @@ import {
   updateUser,
   deleteUser,
 } from '../controllers/usersController';
-import verifyJWT from '../middleware/verifyJWT';
+import verifyJWT, { CustomRequest } from '../middleware/verifyJWT';
 
 const router = express.Router();
 
-router.use(verifyJWT);
+router.use((req, res, next) => verifyJWT(req as CustomRequest, res, next));
 
 router
   .route('/')

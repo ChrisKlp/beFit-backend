@@ -4,7 +4,7 @@ import { login, logout, refresh } from '../controllers/authController';
 
 const router = express.Router();
 
-router.route('/').post(loginLimiter, login);
+router.route('/login').post(loginLimiter, login);
 
 router.route('/refresh').get(refresh);
 

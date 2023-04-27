@@ -3,9 +3,14 @@ import { NextFunction, Request, Response } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
 import { config } from 'dotenv';
 
+export interface CustomRequest extends Request {
+  user: string;
+  roles: string[];
+}
+
 config();
 
-const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
+const verifyJWT = (req: CustomRequest, res: Response, next: NextFunction) => {
   const authHeader = (req.headers.authorization ||
     req.headers.Authorization) as string | undefined;
 
@@ -25,10 +30,12 @@ const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
         return;
       }
 
-      // @ts-ignore
-      req.user = decoded.UserInfo.username;
-      // @ts-ignore
-      req.roles = decoded.UserInfo.roles;
+      const { UserInfo } = decoded as {
+        UserInfo: { username: string; roles: string[] };
+      };
+
+      req.user = UserInfo.username;
+      req.roles = UserInfo.roles;
       next();
     }
   );
