@@ -1,21 +1,19 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextFunction, Request, Response } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
-import { config } from 'dotenv';
+import { StatusCode } from '../utils/AppError';
 
 export interface CustomRequest extends Request {
   user: string;
   roles: string[];
 }
 
-config();
-
 const verifyJWT = (req: CustomRequest, res: Response, next: NextFunction) => {
   const authHeader = (req.headers.authorization ||
     req.headers.Authorization) as string | undefined;
 
   if (!authHeader?.startsWith('Bearer')) {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(StatusCode.Unauthorized).json({ message: 'Unauthorized' });
     return;
   }
 
@@ -26,7 +24,7 @@ const verifyJWT = (req: CustomRequest, res: Response, next: NextFunction) => {
     process.env.ACCESS_TOKEN_SECRET as Secret,
     (err, decoded) => {
       if (err) {
-        res.status(403).json({ message: 'Forbidden' });
+        res.status(StatusCode.Forbidden).json({ message: 'Forbidden' });
         return;
       }
 

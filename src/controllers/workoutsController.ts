@@ -1,30 +1,28 @@
-import asyncHandler from 'express-async-handler';
+import { Request, Response } from 'express';
 import Workout from '../models/Workout';
+import { AppError, StatusCode } from '../utils/AppError';
 
-export const getAllWorkouts = asyncHandler(async (req, res) => {
+export const getAllWorkouts = async (req: Request, res: Response) => {
   const workouts = await Workout.find().populate('exercises.exercise').lean();
 
   if (!workouts?.length) {
-    res.status(400).json({ message: 'No workouts found' });
-    return;
+    throw new AppError('No workouts found', StatusCode.NotFound);
   }
 
   res.json(workouts);
-});
+};
 
-export const createWorkout = asyncHandler(async (req, res) => {
+export const createWorkout = async (req: Request, res: Response) => {
   const { name, type, level, exercises } = req.body;
 
   if (!name || !exercises) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const duplicate = await Workout.findOne({ name }).lean().exec();
 
   if (duplicate) {
-    res.status(409).json({ message: 'Workout already exists' });
-    return;
+    throw new AppError('Workout already exists', StatusCode.Conflict);
   }
 
   const workout = await Workout.create({
@@ -35,32 +33,29 @@ export const createWorkout = asyncHandler(async (req, res) => {
   });
 
   if (workout) {
-    res.status(201).json({ message: 'Workout created' });
+    res.status(StatusCode.Created).json({ message: 'Workout created' });
   } else {
-    res.status(400).json({ message: 'Invalid workout data' });
+    res.status(StatusCode.BadRequest).json({ message: 'Invalid workout data' });
   }
-});
+};
 
-export const updateWorkout = asyncHandler(async (req, res) => {
+export const updateWorkout = async (req: Request, res: Response) => {
   const { id, name, type, level, exercises } = req.body;
 
   if (!id || !name || !exercises) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const workout = await Workout.findById(id).exec();
 
   if (!workout) {
-    res.status(404).json({ message: 'Workout not found' });
-    return;
+    throw new AppError('Workout not found', StatusCode.NotFound);
   }
 
   const duplicate = await Workout.findOne({ name }).lean().exec();
 
   if (duplicate && duplicate._id.toString() !== id) {
-    res.status(409).json({ message: 'Workout already exists' });
-    return;
+    throw new AppError('Workout already exists', StatusCode.Conflict);
   }
 
   workout.name = name;
@@ -69,24 +64,22 @@ export const updateWorkout = asyncHandler(async (req, res) => {
   workout.exercises = exercises;
 
   const updatedWorkout = await workout.save();
-  res.status(200).json({ message: `Workout ${updatedWorkout.name} updated` });
-});
+  res.json({ message: `Workout ${updatedWorkout.name} updated` });
+};
 
-export const deleteWorkout = asyncHandler(async (req, res) => {
+export const deleteWorkout = async (req: Request, res: Response) => {
   const { id } = req.body;
 
   if (!id) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const workout = await Workout.findById(id).exec();
 
   if (!workout) {
-    res.status(404).json({ message: 'Workout not found' });
-    return;
+    throw new AppError('Workout not found', StatusCode.NotFound);
   }
 
   await workout.deleteOne();
   res.json({ message: `Workout ${workout.name} with ${workout.id} deleted` });
-});
+};

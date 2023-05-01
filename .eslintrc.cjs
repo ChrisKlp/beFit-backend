@@ -22,6 +22,7 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': ['warn'],
+    'class-methods-use-this': ['off'],
   },
   ignorePatterns: ['dist', 'build', 'node_modules', '*.cjs'],
 };

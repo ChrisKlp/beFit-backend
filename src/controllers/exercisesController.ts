@@ -1,30 +1,28 @@
-import asyncHandler from 'express-async-handler';
+import { Request, Response } from 'express';
 import Exercise from '../models/Exercise';
+import { AppError, StatusCode } from '../utils/AppError';
 
-export const getAllExercises = asyncHandler(async (req, res) => {
+export const getAllExercises = async (req: Request, res: Response) => {
   const exercises = await Exercise.find().lean();
 
   if (!exercises?.length) {
-    res.status(400).json({ message: 'No exercises found' });
-    return;
+    throw new AppError('No exercises found', StatusCode.NotFound);
   }
 
   res.json(exercises);
-});
+};
 
-export const createExercise = asyncHandler(async (req, res) => {
+export const createExercise = async (req: Request, res: Response) => {
   const { name, videoUrl, type } = req.body;
 
   if (!name) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const duplicate = await Exercise.findOne({ name }).lean().exec();
 
   if (duplicate) {
-    res.status(409).json({ message: 'Exercise already exists' });
-    return;
+    throw new AppError('Exercise already exists', StatusCode.Conflict);
   }
 
   const exercise = await Exercise.create({
@@ -34,32 +32,31 @@ export const createExercise = asyncHandler(async (req, res) => {
   });
 
   if (exercise) {
-    res.status(201).json({ message: 'Exercise created' });
+    res.status(StatusCode.Created).json({ message: 'Exercise created' });
   } else {
-    res.status(400).json({ message: 'Invalid exercise data' });
+    res
+      .status(StatusCode.BadRequest)
+      .json({ message: 'Invalid exercise data' });
   }
-});
+};
 
-export const updateExercise = asyncHandler(async (req, res) => {
+export const updateExercise = async (req: Request, res: Response) => {
   const { id, name, videoUrl, type } = req.body;
 
   if (!id || !name) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const exercise = await Exercise.findById(id).exec();
 
   if (!exercise) {
-    res.status(404).json({ message: 'Exercise not found' });
-    return;
+    throw new AppError('Exercise not found', StatusCode.NotFound);
   }
 
   const duplicate = await Exercise.findOne({ name }).lean().exec();
 
   if (duplicate && duplicate._id.toString() !== id) {
-    res.status(409).json({ message: 'Exercise already exists' });
-    return;
+    throw new AppError('Exercise already exists', StatusCode.Conflict);
   }
 
   exercise.name = name;
@@ -69,25 +66,23 @@ export const updateExercise = asyncHandler(async (req, res) => {
   const updatedExercise = await exercise.save();
 
   res.json({ message: `Exercise ${updatedExercise.name} updated` });
-});
+};
 
-export const deleteExercise = asyncHandler(async (req, res) => {
+export const deleteExercise = async (req: Request, res: Response) => {
   const { id } = req.body;
 
   if (!id) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const exercise = await Exercise.findById(id).exec();
 
   if (!exercise) {
-    res.status(404).json({ message: 'Exercise not found' });
-    return;
+    throw new AppError('Exercise not found', StatusCode.NotFound);
   }
 
   await exercise.deleteOne();
   res.json({
     message: `Exercise ${exercise.name} with ${id} deleted`,
   });
-});
+};

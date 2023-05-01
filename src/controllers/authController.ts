@@ -1,30 +1,26 @@
 import bcrypt from 'bcrypt';
-import { config } from 'dotenv';
-import asyncHandler from 'express-async-handler';
 import jwt, { Secret } from 'jsonwebtoken';
+import { Request, Response } from 'express';
 import User from '../models/User';
+import { AppError, StatusCode } from '../utils/AppError';
 
-config();
-
-export const login = asyncHandler(async (req, res) => {
+export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    res.status(400).json({ message: 'Missing Username or Password' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const foundUser = await User.findOne({ username }).exec();
 
   if (!foundUser) {
-    res.status(401).json({ message: 'Unauthorized' });
-    return;
+    throw new AppError('Unauthorized', StatusCode.Unauthorized);
   }
 
   const isPasswordCorrect = await bcrypt.compare(password, foundUser.password);
 
   if (!isPasswordCorrect) {
-    res.status(401).json({ message: 'Unauthorized' });
+    throw new AppError('Unauthorized', StatusCode.Unauthorized);
   }
 
   const accessToken = jwt.sign(
@@ -50,20 +46,19 @@ export const login = asyncHandler(async (req, res) => {
 
   res.cookie('jwt', refreshToken, {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
 
   res.json({ accessToken });
-});
+};
 
-export const refresh = asyncHandler(async (req, res) => {
+export const refresh = async (req: Request, res: Response) => {
   const { cookies } = req;
 
   if (!cookies?.jwt) {
-    res.status(401).json({ message: 'Unauthorized' });
-    return;
+    throw new AppError('Unauthorized', StatusCode.Unauthorized);
   }
 
   const refreshToken = cookies.jwt as string;
@@ -74,15 +69,13 @@ export const refresh = asyncHandler(async (req, res) => {
   ) as { username: string };
 
   if (!decoded) {
-    res.status(403).json({ message: 'Forbidden' });
-    return;
+    throw new AppError('Forbidden', StatusCode.Forbidden);
   }
 
   const foundUser = await User.findOne({ username: decoded.username }).exec();
 
   if (!foundUser) {
-    res.status(404).json({ message: 'Unauthorized' });
-    return;
+    throw new AppError('Unauthorized', StatusCode.Unauthorized);
   }
 
   const accessToken = jwt.sign(
@@ -99,16 +92,20 @@ export const refresh = asyncHandler(async (req, res) => {
   );
 
   res.json({ accessToken });
-});
+};
 
-export const logout = asyncHandler(async (req, res) => {
+export const logout = async (req: Request, res: Response) => {
   const { cookies } = req;
 
   if (!cookies?.jwt) {
-    res.sendStatus(204);
+    res.sendStatus(StatusCode.NoContent);
     return;
   }
 
-  res.clearCookie('jwt', { httpOnly: true, secure: false, sameSite: 'lax' });
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
   res.json({ message: 'Logged out' });
-});
+};

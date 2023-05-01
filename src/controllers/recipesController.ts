@@ -1,22 +1,9 @@
-import asyncHandler from 'express-async-handler';
-import Recipe from '../models/Recipe';
+import { Request, Response } from 'express';
 import { uploadImage } from '../config/cloudinary';
+import Recipe from '../models/Recipe';
+import { AppError, StatusCode } from '../utils/AppError';
 
-export const getAllRecipes = asyncHandler(async (req, res) => {
-  const recipes = await Recipe.find()
-    .populate('ingredients.ingredient')
-    .populate('categories')
-    .lean();
-
-  if (!recipes?.length) {
-    res.status(400).json({ message: 'No recipes found' });
-    return;
-  }
-
-  res.json(recipes);
-});
-
-export const createRecipe = asyncHandler(async (req, res) => {
+function parseReqToJson(req: Request) {
   if (Object.entries(req.body).length) {
     Object.entries(req.body).forEach(([key, value]) => {
       if (
@@ -28,6 +15,23 @@ export const createRecipe = asyncHandler(async (req, res) => {
       }
     });
   }
+}
+
+export const getAllRecipes = async (req: Request, res: Response) => {
+  const recipes = await Recipe.find()
+    .populate('ingredients.ingredient')
+    .populate('categories')
+    .lean();
+
+  if (!recipes?.length) {
+    throw new AppError('No recipes found', StatusCode.NotFound);
+  }
+
+  res.json(recipes);
+};
+
+export const createRecipe = async (req: Request, res: Response) => {
+  parseReqToJson(req);
 
   const {
     title,
@@ -41,15 +45,13 @@ export const createRecipe = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!title || !ingredients) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const duplicate = await Recipe.findOne({ title }).lean().exec();
 
   if (duplicate) {
-    res.status(409).json({ message: 'Recipe already exists' });
-    return;
+    throw new AppError('Recipe already exists', StatusCode.Conflict);
   }
 
   const imagePath = req.file?.path || '';
@@ -69,26 +71,20 @@ export const createRecipe = asyncHandler(async (req, res) => {
   });
 
   if (recipe && isSuccess) {
-    res.status(201).json({ message: 'Recipe created with image' });
+    res
+      .status(StatusCode.Created)
+      .json({ message: 'Recipe created with image' });
   } else if (recipe && !isSuccess) {
-    res.status(201).json({ message: 'Recipe created without image' });
+    res
+      .status(StatusCode.Created)
+      .json({ message: 'Recipe created without image' });
   } else {
-    res.status(400).json({ message: 'Invalid recipe data' });
+    throw new AppError('Invalid recipe data', StatusCode.BadRequest);
   }
-});
+};
 
-export const updateRecipe = asyncHandler(async (req, res) => {
-  if (Object.entries(req.body).length) {
-    Object.entries(req.body).forEach(([key, value]) => {
-      if (
-        value !== 'undefined' &&
-        value !== 'null' &&
-        typeof value === 'string'
-      ) {
-        req.body[key] = JSON.parse(value);
-      }
-    });
-  }
+export const updateRecipe = async (req: Request, res: Response) => {
+  parseReqToJson(req);
 
   const {
     id,
@@ -103,22 +99,19 @@ export const updateRecipe = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!id || !title || !ingredients) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const recipe = await Recipe.findById(id).exec();
 
   if (!recipe) {
-    res.status(404).json({ message: 'Recipe not found' });
-    return;
+    throw new AppError('Recipe not found', StatusCode.NotFound);
   }
 
   const duplicate = await Recipe.findOne({ title }).lean().exec();
 
   if (duplicate && duplicate._id.toString() !== id) {
-    res.status(409).json({ message: 'Recipe already exists' });
-    return;
+    throw new AppError('Recipe already exists', StatusCode.Conflict);
   }
 
   const imagePath = req.file?.path || '';
@@ -143,25 +136,23 @@ export const updateRecipe = asyncHandler(async (req, res) => {
       message: `Recipe ${updatedRecipe.title} updated without image`,
     });
   }
-});
+};
 
-export const deleteRecipe = asyncHandler(async (req, res) => {
+export const deleteRecipe = async (req: Request, res: Response) => {
   const { id } = req.body;
 
   if (!id) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const recipe = await Recipe.findById(id).exec();
 
   if (!recipe) {
-    res.status(404).json({ message: 'Recipe not found' });
-    return;
+    throw new AppError('Recipe not found', StatusCode.NotFound);
   }
 
   await recipe.deleteOne();
   res.json({
     message: `Recipe ${recipe.title} with ${recipe.id} deleted`,
   });
-});
+};

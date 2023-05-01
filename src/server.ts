@@ -1,20 +1,23 @@
+/* eslint-disable no-console */
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import express from 'express';
+import 'express-async-errors';
 import mongoose from 'mongoose';
 import path from 'path';
 import corsOptions from './config/corsOptions';
 import connectDB from './config/db';
-import errorHandler from './middleware/errorHandler';
+import errorMiddleware from './middleware/errorMiddleware';
+import logger from './middleware/logger';
+import './process';
+import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
 import recipeRoutes from './routes/recipeRoutes';
 import rootRouter from './routes/root';
-import workoutRoutes from './routes/workoutRoutes';
 import userRoutes from './routes/userRoutes';
-import authRoutes from './routes/authRoutes';
-import logger from './middleware/logger';
+import workoutRoutes from './routes/workoutRoutes';
 
 dotenv.config();
 
@@ -50,7 +53,7 @@ app.all('*', (req, res) => {
   }
 });
 
-app.use(errorHandler);
+app.use(errorMiddleware);
 
 mongoose.connection.once('open', () => {
   console.log('Connected to database');

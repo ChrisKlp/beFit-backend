@@ -1,31 +1,29 @@
-import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt';
+import { Request, Response } from 'express';
 import User from '../models/User';
+import { AppError, StatusCode } from '../utils/AppError';
 
-export const getAllUsers = asyncHandler(async (req, res) => {
+export const getAllUsers = async (req: Request, res: Response) => {
   const users = await User.find().select('-password').lean();
 
   if (!users?.length) {
-    res.status(400).json({ message: 'No users found' });
-    return;
+    throw new AppError('No users found', StatusCode.NotFound);
   }
 
   res.json(users);
-});
+};
 
-export const createNewUser = asyncHandler(async (req, res) => {
+export const createNewUser = async (req: Request, res: Response) => {
   const { username, password, roles } = req.body;
 
   if (!username || !password || !Array.isArray(roles) || !roles.length) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const duplicate = await User.findOne({ username }).lean().exec();
 
   if (duplicate) {
-    res.status(409).json({ message: 'User already exists' });
-    return;
+    throw new AppError('User already exists', StatusCode.Conflict);
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -37,32 +35,31 @@ export const createNewUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    res.status(201).json({ message: `User ${user.username} created` });
+    res
+      .status(StatusCode.Created)
+      .json({ message: `User ${user.username} created` });
   } else {
-    res.status(400).json({ message: 'Invalid user data' });
+    res.status(StatusCode.BadRequest).json({ message: 'Invalid user data' });
   }
-});
+};
 
-export const updateUser = asyncHandler(async (req, res) => {
+export const updateUser = async (req: Request, res: Response) => {
   const { id, username, password, roles } = req.body;
 
   if (!id || !username || !Array.isArray(roles) || !roles.length) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const user = await User.findById(id).exec();
 
   if (!user) {
-    res.status(404).json({ message: 'User not found' });
-    return;
+    throw new AppError('User not found', StatusCode.NotFound);
   }
 
   const duplicate = await User.findOne({ username }).lean().exec();
 
   if (duplicate && duplicate._id.toString() !== id) {
-    res.status(409).json({ message: 'User already exists' });
-    return;
+    throw new AppError('User already exists', StatusCode.Conflict);
   }
 
   user.username = username;
@@ -75,24 +72,22 @@ export const updateUser = asyncHandler(async (req, res) => {
   const updatedUser = await user.save();
 
   res.json({ message: `User ${updatedUser.username} updated` });
-});
+};
 
-export const deleteUser = asyncHandler(async (req, res) => {
+export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.body;
 
   if (!id) {
-    res.status(400).json({ message: 'Missing required fields' });
-    return;
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
   }
 
   const user = await User.findById(id).exec();
 
   if (!user) {
-    res.status(404).json({ message: 'User not found' });
-    return;
+    throw new AppError('User not found', StatusCode.NotFound);
   }
 
   const result = await user.deleteOne();
 
   res.json({ message: `User ${result.username} deleted` });
-});
+};
