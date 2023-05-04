@@ -7,7 +7,7 @@ router.get('^/$|/index(.html)?', (req, res) => {
   res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
 
-router.get('/ping', async (req, res) => {
+router.get('/api/ping', async (req, res) => {
   const healthCheck = {
     uptime: process.uptime(),
     message: 'OK',
