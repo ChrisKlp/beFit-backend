@@ -5,8 +5,11 @@ import {
   updateIngredient,
   deleteIngredient,
 } from '../controllers/ingredientsController';
+import verifyJWT, { CustomRequest } from '../middleware/verifyJWT';
 
 const router = express.Router();
+
+router.use((req, res, next) => verifyJWT(req as CustomRequest, res, next));
 
 router
   .route('/')
