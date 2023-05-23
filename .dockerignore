@@ -5,6 +5,3 @@ build
 *.txt
 local
 .DS_Store
-
-*.toml
-DockerFile
