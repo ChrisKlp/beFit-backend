@@ -3,7 +3,8 @@ import { NextFunction, Request, Response } from 'express';
 import { StatusCode } from '../utils/AppError';
 
 const verifyIsAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if ('role' in req && req.role !== 'admin') {
+  const { roles } = req as Request & { roles: string[] };
+  if (!roles || !roles.includes('admin')) {
     res.status(StatusCode.Forbidden).json({ message: 'Forbidden' });
     return;
   }

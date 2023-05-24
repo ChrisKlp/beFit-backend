@@ -14,7 +14,7 @@ router.use((req, res, next) => verifyJWT(req as CustomRequest, res, next));
 
 router
   .route('/')
-  .get(getAllUsers)
+  .get(verifyIsAdmin, getAllUsers)
   .post(verifyIsAdmin, createNewUser)
   .patch(verifyIsAdmin, updateUser)
   .delete(verifyIsAdmin, deleteUser);
