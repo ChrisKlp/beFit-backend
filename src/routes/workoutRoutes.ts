@@ -6,6 +6,7 @@ import {
   updateWorkout,
 } from '../controllers/workoutsController';
 import verifyJWT, { CustomRequest } from '../middleware/verifyJWT';
+import verifyIsAdmin from '../middleware/verifyIsAdmin';
 
 const router = express.Router();
 
@@ -14,8 +15,8 @@ router.use((req, res, next) => verifyJWT(req as CustomRequest, res, next));
 router
   .route('/')
   .get(getAllWorkouts)
-  .post(createWorkout)
-  .patch(updateWorkout)
-  .delete(deleteWorkout);
+  .post(verifyIsAdmin, createWorkout)
+  .patch(verifyIsAdmin, updateWorkout)
+  .delete(verifyIsAdmin, deleteWorkout);
 
 export default router;
