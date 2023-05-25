@@ -18,6 +18,8 @@ import recipeRoutes from './routes/recipeRoutes';
 import rootRouter from './routes/root';
 import userRoutes from './routes/userRoutes';
 import workoutRoutes from './routes/workoutRoutes';
+import menuRoutes from './routes/menuRoutes';
+import userWorkoutRoutes from './routes/userWorkoutRoutes';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/menus', menuRoutes);
+app.use('/api/userWorkouts', userWorkoutRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);
