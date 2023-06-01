@@ -10,7 +10,9 @@ export const getShoppingList = async (req: Request, res: Response) => {
 
   const shoppingList = await ShoppingList.find({
     user: currentUser._id,
-  }).lean();
+  })
+    .populate('products.ingredient')
+    .lean();
 
   if (!shoppingList?.length) {
     throw new AppError('No shopping list found', StatusCode.NotFound);
