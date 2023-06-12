@@ -24,14 +24,6 @@ export const getShoppingList = async (req: Request, res: Response) => {
 export const createShoppingList = async (req: Request, res: Response) => {
   const currentUser = await getCurrentUser(req);
 
-  const existingShoppingList = await ShoppingList.find({
-    user: currentUser._id,
-  }).lean();
-
-  if (existingShoppingList?.length) {
-    await ShoppingList.deleteMany({ user: currentUser._id });
-  }
-
   const userMenus = await Menu.find({ user: currentUser._id })
     .populate('breakfast')
     .populate('secondBreakfast')
