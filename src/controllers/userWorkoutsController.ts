@@ -6,7 +6,34 @@ import getCurrentUser from '../utils/getCurrentUser';
 export const getAllUserWorkouts = async (req: Request, res: Response) => {
   const currentUser = await getCurrentUser(req);
 
-  const workouts = await UserWorkout.find({ user: currentUser._id }).lean();
+  const workouts = await UserWorkout.find({ user: currentUser._id })
+    .populate([
+      {
+        path: 'workoutA',
+        model: 'Workout',
+        populate: {
+          path: 'exercises.exercise',
+          model: 'Exercise',
+        },
+      },
+      {
+        path: 'workoutB',
+        model: 'Workout',
+        populate: {
+          path: 'exercises.exercise',
+          model: 'Exercise',
+        },
+      },
+      {
+        path: 'workoutC',
+        model: 'Workout',
+        populate: {
+          path: 'exercises.exercise',
+          model: 'Exercise',
+        },
+      },
+    ])
+    .lean();
 
   if (!workouts?.length) {
     throw new AppError('No workouts found', StatusCode.NotFound);
