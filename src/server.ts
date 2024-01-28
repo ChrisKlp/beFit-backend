@@ -21,6 +21,7 @@ import workoutRoutes from './routes/workoutRoutes';
 import menuRoutes from './routes/menuRoutes';
 import userWorkoutRoutes from './routes/userWorkoutRoutes';
 import shoppingListRoutes from './routes/shoppingListRoutes';
+import userDoneWorkoutRoutes from './routes/userDoneWorkoutRoutes';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/menus', menuRoutes);
 app.use('/api/user-workouts', userWorkoutRoutes);
 app.use('/api/shopping-list', shoppingListRoutes);
+app.use('/api/user-done-workouts', userDoneWorkoutRoutes);
 
 app.all('*', (req, res) => {
   res.status(404);
