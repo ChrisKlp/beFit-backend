@@ -7,7 +7,7 @@ export const getAllUserDoneWorkouts = async (req: Request, res: Response) => {
   const currentUser = await getCurrentUser(req);
 
   const doneWorkouts = await UserDoneWorkout.find({ user: currentUser._id })
-    .populate('workout')
+    .populate('workout', 'name')
     .lean();
 
   if (!doneWorkouts?.length) {
@@ -22,9 +22,13 @@ export const createUserDoneWorkout = async (req: Request, res: Response) => {
 
   const { userWorkout, workout } = req.body;
 
+  if (!workout) {
+    throw new AppError('Missing required fields', StatusCode.BadRequest);
+  }
+
   const doneWorkout = await UserDoneWorkout.create({
     user: currentUser._id,
-    userWorkout,
+    userWorkout: userWorkout ?? null,
     workout,
   });
 
@@ -64,7 +68,7 @@ export const getCurrentWorkoutHistory = async (req: Request, res: Response) => {
     user: currentUser._id,
     userWorkout: id,
   })
-    .populate('workout')
+    .populate('workout', 'name')
     .lean();
 
   if (!doneWorkouts?.length) {
