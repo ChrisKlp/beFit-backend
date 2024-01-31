@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import UserDoneWorkout from '../models/UserDoneWorkout';
 import { AppError, StatusCode } from '../utils/AppError';
 import getCurrentUser from '../utils/getCurrentUser';
+import UserWorkout from '../models/UserWorkout';
 
 export const getAllUserDoneWorkouts = async (req: Request, res: Response) => {
   const currentUser = await getCurrentUser(req);
@@ -33,6 +34,11 @@ export const createUserDoneWorkout = async (req: Request, res: Response) => {
   });
 
   if (doneWorkout) {
+    if (userWorkout) {
+      UserWorkout.findByIdAndUpdate(userWorkout, {
+        $push: { doneWorkouts: doneWorkout._id },
+      }).exec();
+    }
     res.status(StatusCode.Created).json({ message: 'Done workout created' });
   } else {
     throw new AppError('Invalid done workout data', StatusCode.BadRequest);

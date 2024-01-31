@@ -22,6 +22,12 @@ const userWorkoutSchema = new mongoose.Schema(
       ref: 'Workout',
       default: null,
     },
+    doneWorkouts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'UserDoneWorkout',
+      },
+    ],
   },
   {
     timestamps: true,
